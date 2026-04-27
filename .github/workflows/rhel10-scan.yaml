@@ -137,9 +137,11 @@ jobs:
           DOWNLOAD_URL=$(curl -s \
             -H "Authorization: Bearer $TOKEN" \
             https://console.redhat.com/api/image-builder/v1/composes/$BUILD_ID \
-            | jq -r .image_download_url)
+            | jq -r '.image_status.upload_status.options.url')
 
-          curl -L -o rhel10.img "$DOWNLOAD_URL"
+          echo "Downloading from: $DOWNLOAD_URL"
+
+          curl -L --retry 5 -o rhel10.img "$DOWNLOAD_URL"
 
       - name: Generate SSH key
         run: |
@@ -188,7 +190,7 @@ jobs:
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=2 \
               -o BatchMode=yes \
-              -p 2222 cloud-user@localhost "echo ready" >/dev/null 2>&1; then
+              -p 2222 cloud-user@rhel10 "echo ready" >/dev/null 2>&1; then
               echo "✅ SSH is fully ready"
               exit 0
             fi
@@ -204,7 +206,7 @@ jobs:
 
       - name: Run Trivy scan inside VM
         run: |
-          ssh -i id_rsa -p 2222 cloud-user@localhost <<'EOF'
+          ssh -i id_rsa -p 2222 cloud-user@rhel10 <<'EOF'
           set -e
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           sudo ./bin/trivy rootfs / \
@@ -217,7 +219,7 @@ jobs:
         run: |
           scp -i id_rsa -P 2222 \
             -o StrictHostKeyChecking=no \
-            cloud-user@localhost:/tmp/report.sarif \
+            cloud-user@rhel10:/tmp/report.sarif \
             report.sarif
 
       - name: Stop VM
