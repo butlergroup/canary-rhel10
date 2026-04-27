@@ -199,22 +199,24 @@ jobs:
           echo "❌ SSH failed to become ready"
           exit 1
 
-      - name: Check cloud-init status via console
-        run: |
-          cat vm.log | grep -i cloud-init || true
-
       - name: Dump VM logs
         if: failure()
         run: cat vm.log || true
 
-      - name: Run Trivy scan inside VM
+      - name: Run Trivy scan inside VM (SBOM-based)
         run: |
           ssh -i id_rsa -p 2222 clouduser@localhost <<'EOF'
           set -e
+
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
           sudo ./bin/trivy rootfs / \
+            --format cyclonedx \
+            -o /tmp/sbom.json
+
+          sudo ./bin/trivy sbom /tmp/sbom.json \
             --scanners vuln,misconfig \
-            -f sarif \
+            --format sarif \
             -o /tmp/report.sarif
           EOF
 
