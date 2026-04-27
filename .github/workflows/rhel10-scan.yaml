@@ -181,7 +181,7 @@ jobs:
             -m 2048 \
             -smp 2 \
             -machine type=q35,accel=tcg \
-            -cpu host \
+            -cpu max \
             -drive file=rhel10.img,format=qcow2,if=virtio \
             -drive file=seed.iso,format=raw,if=virtio \
             -boot c \
