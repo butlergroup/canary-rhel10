@@ -210,7 +210,7 @@ jobs:
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           sudo ./bin/trivy rootfs / \
             --scanners vuln,misconfig \
-            --distro rhel \
+            --distro redhat \
             -f sarif \
             -o /tmp/report.sarif
           EOF
