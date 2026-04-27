@@ -175,7 +175,7 @@ jobs:
             -smp 2 \
             -machine type=q35,accel=tcg \
             -drive file=rhel10.img,if=virtio \
-            -drive file=seed.iso,format=raw \
+            -drive file=seed.iso \
             -boot c \
             -netdev user,id=net0,hostfwd=tcp::2222-:22 \
             -device virtio-net-pci,netdev=net0 \
