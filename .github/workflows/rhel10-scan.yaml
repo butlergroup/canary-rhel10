@@ -203,20 +203,16 @@ jobs:
         if: failure()
         run: cat vm.log || true
 
-      - name: Run Trivy scan inside VM (SBOM-based)
+      - name: Run Trivy scan inside VM
         run: |
           ssh -i id_rsa -p 2222 clouduser@localhost <<'EOF'
           set -e
-
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
-
+          TRIVY_DISABLE_VEX_NOTICE=true \
+          TRIVY_IGNORE_UNFIXED=true \
           sudo ./bin/trivy rootfs / \
-            --format cyclonedx \
-            -o /tmp/sbom.json
-
-          sudo ./bin/trivy sbom /tmp/sbom.json \
-            --scanners vuln \
-            --format sarif \
+            --scanners vuln,misconfig \
+            -f sarif \
             -o /tmp/report.sarif
           EOF
 
