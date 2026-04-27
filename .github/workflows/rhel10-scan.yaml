@@ -160,9 +160,6 @@ jobs:
                 - $(cat id_rsa.pub)
           ssh_pwauth: false
           disable_root: true
-          bootcmd:
-            - systemctl enable sshd
-            - systemctl start sshd
           EOF
 
           cloud-localds seed.iso user-data
@@ -192,7 +189,7 @@ jobs:
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=2 \
               -o BatchMode=yes \
-              -p 2222 cloud-user@localhost "echo ready" >/dev/null 2>&1; then
+              -p 2222 clouduser@localhost "echo ready" >/dev/null 2>&1; then
               echo "✅ SSH is fully ready"
               exit 0
             fi
@@ -202,13 +199,17 @@ jobs:
           echo "❌ SSH failed to become ready"
           exit 1
 
+      - name: Check cloud-init status via console
+        run: |
+          cat vm.log | grep -i cloud-init || true
+
       - name: Dump VM logs
         if: failure()
         run: cat vm.log || true
 
       - name: Run Trivy scan inside VM
         run: |
-          ssh -i id_rsa -p 2222 cloud-user@localhost <<'EOF'
+          ssh -i id_rsa -p 2222 clouduser@localhost <<'EOF'
           set -e
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           sudo ./bin/trivy rootfs / \
@@ -221,7 +222,7 @@ jobs:
         run: |
           scp -i id_rsa -P 2222 \
             -o StrictHostKeyChecking=no \
-            cloud-user@localhost:/tmp/report.sarif \
+            clouduser@localhost:/tmp/report.sarif \
             report.sarif
 
       - name: Stop VM
