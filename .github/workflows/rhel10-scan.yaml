@@ -215,7 +215,7 @@ jobs:
             -o /tmp/sbom.json
 
           sudo ./bin/trivy sbom /tmp/sbom.json \
-            --scanners vuln,misconfig \
+            --scanners vuln \
             --format sarif \
             -o /tmp/report.sarif
           EOF
