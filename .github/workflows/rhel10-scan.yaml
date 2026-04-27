@@ -149,31 +149,20 @@ jobs:
 
       - name: Create cloud-init config
         run: |
-          PUB_KEY=$(cat id_rsa.pub)
-
           cat > user-data <<EOF
           #cloud-config
           users:
-            - name: cloud-user
-              ssh-authorized-keys:
-                - ${PUB_KEY}
+            - name: clouduser
               sudo: ALL=(ALL) NOPASSWD:ALL
+              groups: wheel
               shell: /bin/bash
+              ssh_authorized_keys:
+                - $(cat id_rsa.pub)
+          ssh_pwauth: false
+          disable_root: true
           EOF
 
-          cat > meta-data <<EOF
-          instance-id: iid-local01
-          local-hostname: rhel10
-          EOF
-
-          cloud-localds seed.iso user-data meta-data
-
-      - name: Validate image formats
-        run: |
-          file rhel10.img
-          qemu-img info rhel10.img
-          file seed.iso
-          qemu-img info seed.iso
+          cloud-localds seed.iso user-data
 
       - name: Start RHEL10 VM
         run: |
@@ -200,7 +189,7 @@ jobs:
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=2 \
               -o BatchMode=yes \
-              -p 2222 cloud-user@rhel10 "echo ready" >/dev/null 2>&1; then
+              -p 2222 cloud-user@localhost "echo ready" >/dev/null 2>&1; then
               echo "✅ SSH is fully ready"
               exit 0
             fi
@@ -216,7 +205,7 @@ jobs:
 
       - name: Run Trivy scan inside VM
         run: |
-          ssh -i id_rsa -p 2222 cloud-user@rhel10 <<'EOF'
+          ssh -i id_rsa -p 2222 cloud-user@localhost <<'EOF'
           set -e
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
           sudo ./bin/trivy rootfs / \
@@ -229,7 +218,7 @@ jobs:
         run: |
           scp -i id_rsa -P 2222 \
             -o StrictHostKeyChecking=no \
-            cloud-user@rhel10:/tmp/report.sarif \
+            cloud-user@localhost:/tmp/report.sarif \
             report.sarif
 
       - name: Stop VM
