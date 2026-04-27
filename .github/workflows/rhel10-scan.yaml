@@ -168,14 +168,21 @@ jobs:
 
           cloud-localds seed.iso user-data meta-data
 
+      - name: Validate image formats
+        run: |
+          file rhel10.img
+          qemu-img info rhel10.img
+          file seed.iso
+          qemu-img info seed.iso
+
       - name: Start RHEL10 VM
         run: |
           qemu-system-x86_64 \
             -m 2048 \
             -smp 2 \
             -machine type=q35,accel=tcg \
-            -drive file=rhel10.img,if=virtio \
-            -drive file=seed.iso \
+            -drive file=rhel10.img \
+            -drive file=seed.iso,format=raw \
             -boot c \
             -netdev user,id=net0,hostfwd=tcp::2222-:22 \
             -device virtio-net-pci,netdev=net0 \
