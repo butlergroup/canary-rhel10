@@ -67,9 +67,7 @@ jobs:
             | jq -r --arg NAME "$BLUEPRINT_NAME" '
               .data
               | map(select(
-                  .status=="success" and
-                  .image_type=="qcow2" and
-                  .blueprint==$NAME
+                  .image_name==$NAME
               ))
               | sort_by(.created_at)
               | last
@@ -85,6 +83,13 @@ jobs:
             echo "FOUND=false" >> $GITHUB_ENV
           fi
 
+      - name: Debug compose response
+        run: |
+          curl -s \
+            -H "Authorization: Bearer $TOKEN" \
+            https://console.redhat.com/api/image-builder/v1/composes/$BUILD_ID \
+            | jq .
+
       - name: Start image build
         if: env.FOUND == 'false'
         run: |
@@ -93,8 +98,14 @@ jobs:
             -H "Content-Type: application/json" \
             https://console.redhat.com/api/image-builder/v1/compose \
             -d "{
-              \"blueprint\": \"${BLUEPRINT_NAME}\",
-              \"image_type\": \"qcow2\"
+              \"distribution\": \"rhel-10\",
+              \"image_name\": \"${BLUEPRINT_NAME}\",
+              \"image_requests\": [
+                {
+                  \"architecture\": \"x86_64\",
+                  \"image_type\": \"guest-image\"
+                }
+              ]
             }" | jq -r .id)
 
           echo "BUILD_ID=$BUILD_ID" >> $GITHUB_ENV
@@ -103,21 +114,22 @@ jobs:
         if: env.FOUND == 'false'
         run: |
           for i in {1..60}; do
-            STATUS=$(curl -s \
+            RESPONSE=$(curl -s \
               -H "Authorization: Bearer $TOKEN" \
-              https://console.redhat.com/api/image-builder/v1/composes/$BUILD_ID \
-              | jq -r .status)
+              https://console.redhat.com/api/image-builder/v1/composes/$BUILD_ID)
 
-            echo "Status: $STATUS"
+            IMAGE_NAME=$(echo "$RESPONSE" | jq -r .image_name)
 
-            if [ "$STATUS" = "success" ]; then
+            if [ "$IMAGE_NAME" != "null" ]; then
+              echo "✅ Build appears ready"
               exit 0
             fi
 
+            echo "⏳ Waiting for build..."
             sleep 30
           done
 
-          echo "Build failed or timed out"
+          echo "❌ Build timed out"
           exit 1
 
       - name: Download image

@@ -12,8 +12,3 @@ updates:
     directory: "/" # Location of package manifests
     schedule:
       interval: "daily"
-  # Enable version updates for Docker
-  - package-ecosystem: "docker"
-    directory: "/"
-    schedule:
-      interval: "daily"
