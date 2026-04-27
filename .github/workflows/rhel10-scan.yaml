@@ -181,12 +181,15 @@ jobs:
             -m 2048 \
             -smp 2 \
             -machine type=q35,accel=tcg \
-            -drive file=rhel10.img \
-            -drive file=seed.iso,format=raw \
+            -cpu host \
+            -drive file=rhel10.img,format=qcow2,if=virtio \
+            -drive file=seed.iso,format=raw,if=virtio \
             -boot c \
             -netdev user,id=net0,hostfwd=tcp::2222-:22 \
             -device virtio-net-pci,netdev=net0 \
-            -nographic > vm.log 2>&1 &
+            -nographic \
+            -serial mon:stdio \
+            > vm.log 2>&1 &
 
           echo $! > vm.pid
 
