@@ -160,6 +160,9 @@ jobs:
                 - $(cat id_rsa.pub)
           ssh_pwauth: false
           disable_root: true
+          bootcmd:
+            - systemctl enable sshd
+            - systemctl start sshd
           EOF
 
           cloud-localds seed.iso user-data
@@ -184,7 +187,7 @@ jobs:
 
       - name: Wait for SSH to be fully ready
         run: |
-          for i in {1..240}; do
+          for i in {1..120}; do
             if ssh -i id_rsa \
               -o StrictHostKeyChecking=no \
               -o ConnectTimeout=2 \
