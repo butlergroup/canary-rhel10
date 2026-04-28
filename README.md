@@ -1,4 +1,5 @@
 [![](https://img.shields.io/badge/license-AGPL_3.0-blue.svg)](https://opensource.org/licenses/AGPL_3.0)
+[![RHEL10 Runtime Scan](https://github.com/butlergroup/canary-rhel10/actions/workflows/rhel10-scan.yaml/badge.svg)](https://github.com/butlergroup/canary-rhel10/actions/workflows/rhel10-scan.yaml)
 [![CodeQL](https://github.com/butlergroup/canary-rhel10/actions/workflows/github-code-scanning/codeql/badge.svg)](https://github.com/butlergroup/canary-rhel10/actions/workflows/github-code-scanning/codeql)
 [![Dependabot Updates](https://github.com/butlergroup/canary-rhel10/actions/workflows/dependabot/dependabot-updates/badge.svg)](https://github.com/butlergroup/canary-rhel10/actions/workflows/dependabot/dependabot-updates)
 [![OSV-Scanner](https://github.com/butlergroup/canary-rhel10/actions/workflows/osv-scanner.yml/badge.svg)](https://github.com/butlergroup/canary-rhel10/actions/workflows/osv-scanner.yml)
