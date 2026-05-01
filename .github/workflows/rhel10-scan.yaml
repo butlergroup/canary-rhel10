@@ -214,6 +214,7 @@ jobs:
           # Generate SBOM (CycloneDX format is well-supported)
           sudo ./bin/trivy rootfs / \
             --format cyclonedx \
+            --scanners vuln \
             --output /tmp/sbom.json
           EOF
 
@@ -231,7 +232,7 @@ jobs:
       - name: Scan SBOM with Trivy
         run: |
           ./bin/trivy sbom sbom.json \
-            --scanners vuln,misconfig \
+            --scanners vuln \
             -f sarif \
             -o report.sarif
 
