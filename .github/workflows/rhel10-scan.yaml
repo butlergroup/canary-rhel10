@@ -203,23 +203,37 @@ jobs:
         if: failure()
         run: cat vm.log || true
 
-      - name: Run Trivy scan inside VM
+      - name: Generate SBOM inside VM
         run: |
           ssh -i id_rsa -p 2222 clouduser@localhost <<'EOF'
           set -e
+
+          # Install Trivy
           curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+          # Generate SBOM (CycloneDX format is well-supported)
           sudo ./bin/trivy rootfs / \
-            --scanners vuln,misconfig \
-            -f sarif \
-            -o /tmp/report.sarif
+            --format cyclonedx \
+            --output /tmp/sbom.json
           EOF
 
-      - name: Copy report from VM
+      - name: Copy SBOM from VM
         run: |
           scp -i id_rsa -P 2222 \
             -o StrictHostKeyChecking=no \
-            clouduser@localhost:/tmp/report.sarif \
-            report.sarif
+            clouduser@localhost:/tmp/sbom.json \
+            sbom.json
+
+      - name: Install Trivy on runner
+        run: |
+          curl -sfL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/install.sh | sh
+
+      - name: Scan SBOM with Trivy
+        run: |
+          ./bin/trivy sbom sbom.json \
+            --scanners vuln,misconfig \
+            -f sarif \
+            -o report.sarif
 
       - name: Stop VM
         if: always()
